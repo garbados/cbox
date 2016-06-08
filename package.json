@@ -5,7 +5,7 @@
   "preferGlobal": "true",
   "main": "./lib/index.js",
   "bin": {
-    "quilt": "./bin/index.js"
+    "quilter": "./bin/index.js"
   },
   "directories": {
     "test": "tests"
@@ -18,11 +18,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:garbados/quilt.js.git"
+    "url": "git@github.com:garbados/quilter.git"
   },
   "keywords": [
     "couchdb",
-    "cloudant",
     "watch",
     "files",
     "sync",
@@ -30,8 +29,8 @@
     "replication",
     "edgewise"
   ],
-  "author": "Max Thayer <garbados@gmail.com>",
-  "license": "MIT",
+  "author": "Diana Thayer <garbados@gmail.com>",
+  "license": "ISC",
   "devDependencies": {
     "grunt": "~0.4.2",
     "grunt-cli": "^0.1.13",
@@ -43,15 +42,17 @@
     "mocha": "~1.13.0"
   },
   "dependencies": {
-    "watch": "~0.8.0",
-    "nano": "~4.1.4",
     "async": "~0.2.9",
+    "bluebird": "^3.4.0",
+    "commander": "^2.9.0",
+    "coveralls": "~2.6.1",
     "dive": "~0.3.0",
-    "underscore": "~1.5.2",
     "mime": "~1.2.11",
-    "optimist": "~0.6.0",
-    "winston": "~0.7.2",
     "mocha-lcov-reporter": "0.0.1",
-    "coveralls": "~2.6.1"
+    "nano": "~4.1.4",
+    "optimist": "~0.6.0",
+    "underscore": "~1.5.2",
+    "watch": "~0.8.0",
+    "winston": "~0.7.2"
   }
 }
