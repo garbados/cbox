@@ -31,6 +31,7 @@ That's it! cbox will watch files on the `remote` database and in the `local` fol
 * `push`: push files from `local` up to `remote`
 * `sync`: push and pull files from and to `local` and `remote`
 * `jobs`: list all saved jobs
+* `rm`: remove a saved job, without modifying any remote or local copy
 * `all`: run all saved jobs
 
 ## Options
