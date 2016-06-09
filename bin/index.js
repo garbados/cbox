@@ -76,6 +76,18 @@ program
   });
 
 program
+  .command('rm <n>')
+  .description('Delete a saved job with ID `n`')
+  .action(function (n) {
+    var options = pruneOptions(program);
+    quilter
+      .rm(n, options)
+      .then(function () {
+        console.log('Deleted job ', n);
+      });
+  });
+
+program
   .command('all')
   .description('Default - Execute all saved jobs')
   .action(function (command, options) {
