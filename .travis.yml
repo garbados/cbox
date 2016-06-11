@@ -4,5 +4,8 @@ services:
 after_success:
   - npm run-script coveralls
 node_js:
-  - '0.10'
+  - '5'
+  - '4'
+  - '0.12'
   - '0.11'
+  - 'iojs'

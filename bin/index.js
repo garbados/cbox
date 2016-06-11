@@ -1,35 +1,51 @@
 #!/usr/bin/env node
 
+var winston = require('winston');
 var program = require('commander');
-var quilter = require('../lib');
+var pkg = require('../package.json');
+var cbox = require('../lib');
+var tasks = cbox.tasks;
+
 
 function pruneOptions (program) {
   return {
     command: program.args[0],
-    save: program.save,
-    local: program.local,
-    remote: program.remote,
-    watch: program.watch,
+    save: program.save || false,
+    local: program.local || undefined,
+    remote: program.remote || undefined,
+    watch: program.watch || false,
     config: program.config
   };
 }
 
+function handlePromise (command, promise) {
+  return promise
+  .then(function (result) {
+    winston.info('Finished running task:', command);
+  })
+  .catch(function (error) {
+    winston.error(error.message);
+  });
+}
+
 program
-  .version('0.2.1')
+  .version(pkg.version)
   .option('-s, --save', 'Save a job to the configuration file but don\'t execute it.')
   .option('-l, --local [PATH]', 'A local folder, like `~/Pictures`')
   .option('-r, --remote [URL]', 'A remote CouchDB instance.')
   .option('-w, --watch', 'Continue watching and reacting to changes indefinitely.')
-  .option('-c, --config [PATH]', 'Specify the path to a config file. Defaults to: `~/.quilter.json`');
+  .option('-c, --config [PATH]', 'Specify the path to a config file. Defaults to: `~/.cbox.json`');
 
 program
   .command('pull [options]')
   .description('Pull files from `remote` into `local`')
   .action(function (command) {
+    var options = pruneOptions(program);
+    options.command = 'pull';
     if (options.save) {
-      return quilter.save(command, options);
+      return handlePromise('save', tasks.save(options));
     } else {
-      return quilter.pull(command, options);
+      return handlePromise('pull', tasks.pull(options));
     }
   });
 
@@ -40,20 +56,22 @@ program
     var options = pruneOptions(program);
     options.command = 'push';
     if (options.save) {
-      return quilter.save(options);
+      return handlePromise('save', tasks.save(options));
     } else {
-      return quilter.push(options);
+      return handlePromise('push', tasks.push(options));
     }
   });
 
 program
   .command('sync [options]')
   .description('push and pull files from and to `local` and `remote`')
-  .action(function (command, options) {
+  .action(function () {
+    var options = pruneOptions(program);
+    options.command = 'sync';
     if (options.save) {
-      return quilter.save(options);
+      return handlePromise('save', tasks.save(options));
     } else {
-      return quilter.sync(options);
+      return handlePromise('sync', tasks.sync(options));
     }
   });
 
@@ -61,18 +79,10 @@ program
   .command('jobs')
   .description('List all saved jobs')
   .action(function () {
+    if (program.log) winston.level = program.log;
     var options = pruneOptions(program);
-    quilter
-      .jobs(options)
-      .then(function (jobs) {
-        jobs.forEach(function (job, i) {
-          console.log('job', i+1);
-          console.log('\t', 'command:', job.command);
-          console.log('\t', 'local:', job.local);
-          console.log('\t', 'remote:', job.remote);
-          if (job.watch) console.log('\t', 'watch:', job.watch);
-        });
-      });
+    options.command = 'jobs';
+    return handlePromise('jobs', tasks.jobs(options));
   });
 
 program
@@ -80,18 +90,16 @@ program
   .description('Delete a saved job with ID `n`')
   .action(function (n) {
     var options = pruneOptions(program);
-    quilter
-      .rm(n, options)
-      .then(function () {
-        console.log('Deleted job ', n);
-      });
+    options.n = n;
+    return handlePromise('rm', tasks.rm(options));
   });
 
 program
   .command('all')
-  .description('Default - Execute all saved jobs')
-  .action(function (command, options) {
-    // TODO
+  .description('Execute all saved jobs')
+  .action(function () {
+    var options = pruneOptions(program);
+    tasks.all(options);
   });
 
 program.parse(process.argv);
