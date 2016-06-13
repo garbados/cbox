@@ -2,7 +2,6 @@
 
 [![Build Status](https://secure.travis-ci.org/garbados/cbox.png?branch=master)](http://travis-ci.org/garbados/cbox)
 [![Coverage Status](https://coveralls.io/repos/garbados/cbox/badge.png)](https://coveralls.io/r/garbados/cbox)
-[![Stories in Ready](https://badge.waffle.io/garbados/cbox.png?label=ready)](http://waffle.io/garbados/cbox)
 [![NPM version](https://badge.fury.io/js/cbox.png)](http://badge.fury.io/js/cbox)
 
 Maps a file directory into CouchDB attachments, and then pushes, pulls, or syncs with a CouchDB instance. Designed to run forever, consume minimal network traffic, and preserve file history while respecting deletions.
