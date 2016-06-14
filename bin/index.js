@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-var winston = require('winston');
 var program = require('commander');
 var pkg = require('../package.json');
 var cbox = require('../lib');
 var tasks = cbox.tasks;
+var log = cbox.utils.log;
 
 
 function pruneOptions (program) {
@@ -21,11 +21,11 @@ function pruneOptions (program) {
 function handlePromise (command, promise) {
   return promise
   .then(function (result) {
-    winston.info('Finished running task:', command);
+    log.info('Finished running task:', command);
   })
   .catch(function (error) {
-    winston.error(error.message);
-    if (error.stack) winston.error(error.stack);
+    log.error(error.message);
+    if (error.stack) log.error(error.stack);
   });
 }
 
@@ -80,7 +80,7 @@ program
   .command('jobs')
   .description('List all saved jobs')
   .action(function () {
-    if (program.log) winston.level = program.log;
+    if (program.log) log.level = program.log;
     var options = pruneOptions(program);
     options.command = 'jobs';
     return handlePromise('jobs', tasks.jobs(options));

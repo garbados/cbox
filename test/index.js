@@ -3,16 +3,17 @@ var _ = require('underscore');
 var assert = require('chai').assert;
 var mock_fs = require('mock-fs');
 var nock = require('nock'); // TODO use to mock external resources
+var PouchDB = require('pouchdb');
+
 var cbox = require('../lib-cov');
 
 // hide 'info' messages
-var winston = require('winston');
-winston.level = 'warn';
+cbox.utils.log.level = 'crit';
 
 // default options
 const OPTIONS = {
   local: 'test-fixtures',
-  remote: 'http://test:password@localhost:5984/cbox-test-fixtures',
+  remote: 'http://localhost:5984/cbox-test-fixtures',
   config: 'test-fixtures/config.json',
   watch: false,
   save: false,
@@ -43,7 +44,7 @@ describe('cbox', function () {
     describe('#jobs', function () {
       before(function () {
         // save a job
-        var options = _.extend({}, OPTIONS, { save: true, watch: true, command: 'sync' });
+        var options = _.extend({}, OPTIONS, { save: true, watch: true, command: 'sync', remote: 'http://localhost:5984/cbox-test-fixtures' });
 
         return cbox.utils.config.load(options.config)
         .then(function (config) {
@@ -123,24 +124,60 @@ describe('cbox', function () {
     });
 
     describe('#pull', function () {
-      var scope = nock(OPTIONS.remote); // TODO
+      // TODO nock; may need to sniff responses and the like
+      var db = new PouchDB(OPTIONS.remote);
+      var rev = undefined;
 
-      it.skip('should pull files from remote database to local directory', function () {
-        // TODO initiate pull
-        // TODO ensure remote data overwrote local
-        // .then(function () {
-        //   // ensure all expected calls have resolved as expected.
-        //   scope.done();
-        // });
+      var new_config = [{
+                local: OPTIONS.local,
+                remote: OPTIONS.remote,
+                command: 'push',
+                watch: false
+              }, {
+                local: 'a',
+                remote: 'b',
+                command: 'push',
+                watch: false
+              }];
+
+      before(function () {
+        // update db with docs to pull
+        var new_config_buffer = Buffer(JSON.stringify(new_config));
+
+        return db.put({
+          _id: OPTIONS.config.split('/')[1],
+          timestamp: Date.now(),
+          hash: 'abcdef'
+        })
+        .then(function (result) {
+          return db.putAttachment(result.id, 'file', result.rev, new_config_buffer, 'application/json');
+        })
+        .then(function (result) {
+          rev = result.rev;
+
+          return Promise.resolve();
+        });
+      });
+
+      it('should pull files from remote database to local directory', function () {
+        return cbox.tasks.pull(OPTIONS)
+        .then(function (result) {
+          // did it successfully modify the local?
+          return cbox.utils.config.load(OPTIONS.config)
+          .then(function (config) {
+            assert.equal(config.jobs.length, new_config.length);
+          });
+        })
       });
 
       after(function () {
         // reset affected files
+        return db.remove(OPTIONS.config.split('/')[1], rev);
       });
     });
 
     describe('#push', function () {
-      var scope = nock(OPTIONS.remote); // TODO
+      // TODO nock; may need to sniff responses and the like
 
       it.skip('should push files to remote database from local directory', function () {
         // TODO initiate pull
@@ -211,9 +248,20 @@ describe('cbox', function () {
   describe('utils', function () {
     describe('config', function () {
       describe('#load', function () {
-        it('should retrieve a config');
-        it('should fail to retrieve a bogus config');
-        it('should fallback to defaults when instructed');
+        var bogus_filepath = 'sup_nerds';
+        it('should retrieve a config', function () {
+          return cbox.utils.config.load(OPTIONS.config)
+            .then(function (config) {
+              assert.equal(config.jobs.length, 0);
+            });
+        });
+
+        it('should fail to retrieve a bogus config', function () {
+          return cbox.utils.config.load(bogus_filepath)
+            .catch(function (e) {
+              assert.equal(e.code, 'ENOENT');
+            });
+        });
       });
     });
     // describe('constants');
